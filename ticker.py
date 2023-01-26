@@ -16,3 +16,8 @@ def tickerAll():
 def findOneTicker(ticker):
     ticker_all = tickerAll()
     return ticker_all[ticker_all['ticker'] == ticker]
+
+def findFigiForTicker(ticker):
+    ticker_all = tickerAll()
+    finded_ticker = ticker_all[ticker_all['ticker'] == ticker]
+    return finded_ticker['figi'].values[0]

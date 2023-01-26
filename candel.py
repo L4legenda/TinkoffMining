@@ -27,7 +27,8 @@ def candel_last(figi: str, days=7, save=False):
                     "volume": candle.volume,
                 }
                 candel_list.append(candel_dict)
-
+    if len(candel_list) == 0:
+        raise Exception("Empty data")
     datetime_string = datetime.now().strftime("%m-%d-%Y")
     df = pd.DataFrame(candel_list)
 
