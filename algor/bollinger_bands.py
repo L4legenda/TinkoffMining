@@ -13,6 +13,7 @@ def run(data):
     # Initialize the position and profit variables
     position = 0
     profit = 0
+    investment = 0
 
     # Iterate through the data
     for i in range(len(data)):
@@ -25,12 +26,20 @@ def run(data):
         elif data['close'][i] < data['lower_band'][i] and position <= 0:
             # Buy
             position += 1
+            investment += data['close'][i]
             profit -= data['close'][i]
+
+    if investment != 0:
+        percent_profit = round(profit / investment * 100, 2)
+    else:
+        percent_profit = 0
 
     profit = int(profit)
     # Print the final profit
     print("Profit BB: ", profit)
+    print("Percent Profit BB: ", percent_profit)
 
     return {
-        "profit": profit
+        "profit": profit,
+        "percent_profit": percent_profit,
     }

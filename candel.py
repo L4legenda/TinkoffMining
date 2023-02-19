@@ -16,7 +16,7 @@ def candel_last(figi: str, days=7, save=False):
         for candle in client.get_all_candles(
                 figi=figi,
                 from_=now() - timedelta(days=days),
-                interval=CandleInterval.CANDLE_INTERVAL_15_MIN,
+                interval=CandleInterval.CANDLE_INTERVAL_1_MIN,
             ):
                 candel_dict = {
                     "date": candle.time.isoformat(),
