@@ -20,4 +20,6 @@ def findOneTicker(ticker):
 def findFigiForTicker(ticker):
     ticker_all = tickerAll()
     finded_ticker = ticker_all[ticker_all['ticker'] == ticker]
-    return finded_ticker['figi'].values[0]
+    if len(finded_ticker['figi'].values) > 0:
+        return finded_ticker['figi'].values[0]
+    return None

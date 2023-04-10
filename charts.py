@@ -7,36 +7,36 @@ import algor.bollinger_bands as bollinger_bands
 import algor.MACD_alg as MACD_alg
 import algor.fibonacci as fibonacci
 import test_code as test_code
+import algor.ema_crossover as EMA_Crossover
+import matplotlib.pyplot as plt
+import tikets
 
 
-
-delta_days = 60
+delta_days = 30
 is_short = True
 
 
-# RNFT
-# NLMK
-# MAGN
-_ticker = "AFKS"
+# RNFT - 0.86% шт 120 days
+# NLMK = -
+# MAGN = 2.46% in 120 days
+# AFKS = 9.68% in 120 days, 20% in 30 days
+# AFKS = 9.96% in 120 days, 20% in 30 days
+for __ticker in tikets.RUSSIAN_TICKER:
+    _ticker = __ticker
 
-figi = ticker.findFigiForTicker(_ticker)
-print(figi)
-candel_last = candel.candel_last(figi, days=delta_days)
+    figi = ticker.findFigiForTicker(_ticker)
+    print(figi)
+    try:
+        candel_last = candel.candel_last(figi, days=delta_days)
+    except:
+        print("Empty data")
+    # print(candel_last)
 
-# SMA = moving_average_crossover.run(candel_last)
-# moving_average_crossover.view(candel_last, SMA["buy_times"], SMA["sell_times"])
-# profit_SMA = SMA['profit']
-# print(f"SMA: {profit_SMA}")
-
-# RSI = relative_strength_index.run(candel_last)
-# relative_strength_index.view(candel_last, RSI["buy_times"], RSI["sell_times"])
-# profit_RSI = RSI['profit']
-# print(f"RSI: {profit_RSI}")
-
-# fiba = fibonacci.test_algorithm(candel_last)
-fiba = fibonacci.test_strategy(candel_last, window_size=16, is_short=is_short)
-# print(fiba)
-# fibonacci.plot_data(candel_last, fiba['buy_signals'], fiba['sell_signals'])
-
-
+    fiba = fibonacci.test_algorithm(candel_last)
+    print(_ticker, fiba['profit'], fiba['percent_profit'], len(candel_last))
+    # fiba = fibonacci.run(candel_last)
+    # print(fiba)
+    # fibonacci.plot_data(candel_last, fiba['buy_signals'], fiba['sell_signals'])
+    # fibonacci.plot_trading_signals(candel_last, fiba['buy_signals'], fiba['sell_signals'])
+    print("=======")
 

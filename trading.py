@@ -10,7 +10,7 @@ from datetime import datetime
 def main():
     figi = ticker.findFigiForTicker(CURRENT_TICKER)
 
-    delta_days = 1
+    delta_days = 3
     is_short = True
     window_size = 20
 

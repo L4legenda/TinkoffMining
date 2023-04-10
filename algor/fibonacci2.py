@@ -6,64 +6,67 @@ import matplotlib.dates as mdates
 import matplotlib.animation as animation
 
 
-def run(data, levels=[0.236, 0.382, 0.5, 0.618, 0.786], window_size=20, stop_loss=0.05):
-    # Calculate the highest and lowest price
-    highest_price = data['high'].max()
-    lowest_price = data['low'].min()
-
-    # Calculate the price range
-    price_range = highest_price - lowest_price
-
-    # Calculate the Fibonacci levels
-    fib_levels = []
-    for level in levels:
-        fib_levels.append(highest_price - level * price_range)
-
+def run(data, levels=[0.236, 0.382, 0.5, 0.618, 0.786], window_size=20, stop_loss=0.05, take_profit=0.1, rsi_period=14, risk_percent=0.02, commission=0.0004):
+    # Validate input data
+    if not all(col in data.columns for col in ['high', 'low', 'close']):
+        raise ValueError("Input data must contain 'high', 'low', and 'close' columns.")
+    
     # Initialize the position and profit variables
     position = 0
     profit = 0
     investment = 0
+    capital = 10000  # Initial capital
+    position_size = capital * risk_percent
 
     buy_signals = []
     sell_signals = []
 
-    # Calculate the SMA
+    # Calculate the EMA
     close_prices = data['close']
-    sma = talib.SMA(close_prices, window_size)
-
-    # Add improvement 2: Use EMA instead of SMA
     ema = talib.EMA(close_prices, window_size)
 
-    # Add improvement 3: Use RSI to filter signals
-    rsi = talib.RSI(close_prices, timeperiod=14)
+    # Calculate the RSI
+    rsi = talib.RSI(close_prices, timeperiod=rsi_period)
 
     # Iterate through the data
     for i in range(len(data)):
+        # Calculate dynamic Fibonacci levels
+        highest_price = data['high'][:i+1].max()
+        lowest_price = data['low'][:i+1].min()
+        price_range = highest_price - lowest_price
+        fib_levels = [highest_price - level * price_range for level in levels]
+
         # Look for a buy signal when the price is near a support level
-        if data['low'][i] < fib_levels[0] and rsi[i] < 30 and position <= 0:
+        if data['low'][i] < fib_levels[0] and rsi[i] < 50 and position <= 0:
             # Buy
             position += 1
-            investment += data['close'][i] * 1.0004  # Include commission
-            profit -= data['close'][i] * 1.0004
+            investment += data['close'][i] * (1 + commission)
+            profit -= data['close'][i] * (1 + commission)
             buy_signals.append((i, data['close'][i]))
         # Look for a sell signal when the price is near a resistance level
-        elif data['high'][i] > fib_levels[-1] and rsi[i] > 70 and position >= 0:
+        elif data['high'][i] > fib_levels[-1] and rsi[i] > 50 and position >= 0:
             # Sell
             position -= 1
-            profit += data['close'][i]
+            profit += data['close'][i] * (1 - commission)
             sell_signals.append((i, data['close'][i]))
-        # Use trailing stop-loss
-        elif position > 0 and data['close'][i] < data['close'][i-1] * (1 - stop_loss):
-            # Sell
-            position = 0
-            profit += data['close'][i]
-            sell_signals.append((i, data['close'][i]))
+        # Use trailing stop-loss and take-profit
+        elif position > 0:
+            if data['close'][i] < data['close'][i-1] * (1 - stop_loss):
+                # Sell with stop-loss
+                position = 0
+                profit += data['close'][i] * (1 - commission)
+                sell_signals.append((i, data['close'][i]))
+            elif data['close'][i] > data['close'][i-1] * (1 + take_profit):
+                # Sell with take-profit
+                position = 0
+                profit += data['close'][i] * (1 - commission)
+                sell_signals.append((i, data['close'][i]))
 
         # Check for end of data
         if i == len(data) - 1 and position > 0:
             # Sell
             position = 0
-            profit += data['close'][i]
+            profit += data['close'][i] * (1 - commission)
             sell_signals.append((i, data['close'][i]))
 
     if investment != 0:
@@ -80,9 +83,8 @@ def run(data, levels=[0.236, 0.382, 0.5, 0.618, 0.786], window_size=20, stop_los
     }
 
 
-def test_algorithm(data, levels=[0.236, 0.382, 0.5, 0.618, 0.786], window_size=20, stop_loss=0.05):
-    result = run(data, levels=levels,
-                 window_size=window_size, stop_loss=stop_loss)
+def test_algorithm(data):
+    result = run(data)
     print("Profit: ", result['profit'])
     print("Percent Profit: ", result['percent_profit'])
 
@@ -165,7 +167,7 @@ def get_signal(data, position, levels=[0.236, 0.382, 0.5, 0.618, 0.786], window_
         return None
 
 
-def test_strategy(data, levels=[0.236, 0.382, 0.5, 0.618, 0.786], window_size=20, is_short=False, stop_loss=0.02):
+def test_strategy(data, window_size=20, is_short=False):
     # Check if data is empty
     if data.empty:
         print("Error: Data is empty")
@@ -180,7 +182,7 @@ def test_strategy(data, levels=[0.236, 0.382, 0.5, 0.618, 0.786], window_size=20
     sell_signals = []
     for i in range(window_size, len(data)):
         signal = get_signal(
-            data.iloc[i-window_size:i+1], position=position, levels=levels, is_short=is_short)
+            data.iloc[i-window_size:i+1], position=position, is_short=is_short)
         signals.append(signal)
         if signal == 'buy':
             print('buy', data.iloc[i-window_size:i+1])
@@ -218,22 +220,3 @@ def test_strategy(data, levels=[0.236, 0.382, 0.5, 0.618, 0.786], window_size=20
         "profit": profit,
         "percent_profit": percent_profit,
     }
-
-
-def plot_trading_signals(data, buy_signals, sell_signals):
-    plt.figure(figsize=(14, 7))
-    plt.plot(data['close'], label='Close Price', alpha=0.5)
-    
-    # Plot buy signals
-    for signal in buy_signals:
-        plt.scatter(signal[0], signal[1], marker='^', color='g', label='Buy', alpha=1)
-    
-    # Plot sell signals
-    for signal in sell_signals:
-        plt.scatter(signal[0], signal[1], marker='v', color='r', label='Sell', alpha=1)
-    
-    plt.title('Buy and Sell signals')
-    plt.xlabel('Date')
-    plt.ylabel('Price')
-    plt.legend(loc='best')
-    plt.show()
