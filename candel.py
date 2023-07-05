@@ -20,10 +20,10 @@ def candel_last(figi: str, days=7, save=False):
             ):
                 candel_dict = {
                     "date": candle.time.isoformat(),
-                    "open": candle.open.units,
-                    "high": candle.high.units,
-                    "low": candle.low.units,
-                    "close": candle.close.units,
+                    "open": float(f"{candle.open.units}.{candle.open.nano}"),
+                    "high": float(f"{candle.high.units}.{candle.high.nano}"),
+                    "low": float(f"{candle.low.units}.{candle.low.nano}"),
+                    "close": float(f"{candle.close.units}.{candle.close.nano}"),
                     "volume": candle.volume,
                 }
                 candel_list.append(candel_dict)

@@ -223,15 +223,17 @@ def test_strategy(data, levels=[0.236, 0.382, 0.5, 0.618, 0.786], window_size=20
 def plot_trading_signals(data, buy_signals, sell_signals):
     plt.figure(figsize=(14, 7))
     plt.plot(data['close'], label='Close Price', alpha=0.5)
-    
+
     # Plot buy signals
     for signal in buy_signals:
-        plt.scatter(signal[0], signal[1], marker='^', color='g', label='Buy', alpha=1)
-    
+        plt.scatter(signal[0], signal[1], marker='^',
+                    color='g', label='Buy', alpha=1)
+
     # Plot sell signals
     for signal in sell_signals:
-        plt.scatter(signal[0], signal[1], marker='v', color='r', label='Sell', alpha=1)
-    
+        plt.scatter(signal[0], signal[1], marker='v',
+                    color='r', label='Sell', alpha=1)
+
     plt.title('Buy and Sell signals')
     plt.xlabel('Date')
     plt.ylabel('Price')
